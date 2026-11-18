@@ -7,23 +7,33 @@
 #   script     f/sis/claim_outstanding_job   <- windmill/f/sis/claim_outstanding_job.ts
 #   schedule   f/sis/claim_outstanding_hourly (0 5 * * * *, Asia/Jakarta)
 #
-# Usage: ./windmill/setup.sh   (reads windmill/.env; needs curl + jq)
+# Usage: ./windmill/setup.sh [env-file]   (default windmill/.env; needs curl + jq)
+#   e.g. ./windmill/setup.sh windmill/.env.server
+# Auth: WM_TOKEN (API token, for servers with SSO) or WM_EMAIL + WM_PASSWORD.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-# shellcheck disable=SC1091
-set -a; source "$DIR/.env"; set +a
+ENV_FILE="${1:-$DIR/.env}"
+[ -f "$ENV_FILE" ] || { echo "env file not found: $ENV_FILE" >&2; exit 1; }
+# shellcheck disable=SC1090
+set -a; source "$ENV_FILE"; set +a
 
-: "${WM_URL:?}" "${WM_EMAIL:?}" "${WM_PASSWORD:?}" "${WM_WORKSPACE:?}"
-: "${CLAIM_SERVICE_BASE_URL:?}" "${CLAIM_INTERNAL_API_KEY:?set CLAIM_INTERNAL_API_KEY in windmill/.env}"
+: "${WM_URL:?}" "${WM_WORKSPACE:?}"
+: "${CLAIM_SERVICE_BASE_URL:?}" "${CLAIM_INTERNAL_API_KEY:?set CLAIM_INTERNAL_API_KEY in $ENV_FILE}"
 SCHEDULE_ENABLED="${SCHEDULE_ENABLED:-false}"
 
 API="$WM_URL/api"
 W="$API/w/$WM_WORKSPACE"
 
-echo "› login $WM_EMAIL @ $WM_URL"
-TOKEN=$(curl -fsS -X POST "$API/auth/login" -H 'Content-Type: application/json' \
-  -d "$(jq -n --arg e "$WM_EMAIL" --arg p "$WM_PASSWORD" '{email:$e,password:$p}')")
+if [ -n "${WM_TOKEN:-}" ]; then
+  echo "› token auth @ $WM_URL ($ENV_FILE)"
+  TOKEN=$WM_TOKEN
+else
+  : "${WM_EMAIL:?set WM_TOKEN, or WM_EMAIL + WM_PASSWORD}" "${WM_PASSWORD:?}"
+  echo "› login $WM_EMAIL @ $WM_URL ($ENV_FILE)"
+  TOKEN=$(curl -fsS -X POST "$API/auth/login" -H 'Content-Type: application/json' \
+    -d "$(jq -n --arg e "$WM_EMAIL" --arg p "$WM_PASSWORD" '{email:$e,password:$p}')")
+fi
 AUTH=(-H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json')
 
 get()  { curl -fsS "${AUTH[@]}" "$1"; }

@@ -24,6 +24,8 @@ Windmill (self-hosted, Community Edition) menjalankan job terjadwal SIS dengan m
 5. Login UI `admin@windmill.dev` / `changeme`, buka workspace **sis**, lalu **ganti password admin**.
 6. Uji: buka script `f/sis/claim_outstanding_job` → **Test** / **Run**. Untuk uji terbatas isi argumen **`limit`** (mis. `100`, maks 1000): script memanggil sekali dengan `?limit=` dan memindahkan paling banyak sebanyak itu. Kosongkan untuk run penuh. Setelah hasilnya benar, aktifkan schedule (UI → Schedules, atau `SCHEDULE_ENABLED=true ./windmill/setup.sh`).
 
+**Windmill di server** (sudah terpasang, workspace kosong): buat `windmill/.env.server` dari `.env.example`, isi `WM_URL` server, `WM_TOKEN` (UI → Settings → Tokens) atau email/password, `CLAIM_SERVICE_BASE_URL` yang bisa dijangkau worker server, dan `CLAIM_INTERNAL_API_KEY` = `INTERNAL_API_KEY` claim-service di server tersebut. Lalu `./windmill/setup.sh windmill/.env.server`. File `.env.*` tidak di-commit.
+
 > ⚠️ Claim-service dev memakai **database dev bersama**. Menjalankan job berarti memindahkan klaim dev yang memenuhi syarat ke Outstanding dan mengirim notifikasi `CLAIM_OUTSTANDING` ke user PIC Email. Karena itu schedule dibuat **nonaktif** secara default.
 
 ## Perilaku script (pengganti state machine Step Functions)
