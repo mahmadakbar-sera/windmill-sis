@@ -1,0 +1,82 @@
+name: sera-sis-windmill
+
+# Windmill (self-hosted, Community Edition) as the SIS scheduler: it calls the
+# internal job endpoints of the services on a cron, e.g. API-CL-34 Job
+# Outstanding (`POST /internal/v1/claims/jobs/outstanding`, every hour at :05).
+#
+# Separate from the main stack (../docker-compose.yml) so it can be started
+# and stopped on its own. Its own Postgres holds Windmill's state only; the
+# SIS data stays in the services' databases.
+#
+# The worker joins `sera-sis-network` (created by the main stack, so start
+# that first) to reach `http://claim-service:3003`.
+#
+#   docker compose -f windmill/docker-compose.yml --env-file windmill/.env up -d
+#   UI: http://localhost:8000  (first login admin@windmill.dev / changeme)
+#
+# Then run ./windmill/setup.sh once to create the workspace, variables,
+# script and schedule. See windmill/README.md.
+
+x-windmill: &windmill
+  image: ghcr.io/windmill-labs/windmill:${WM_VERSION:-main}
+  restart: unless-stopped
+  depends_on:
+    windmill_db:
+      condition: service_healthy
+
+services:
+  windmill_db:
+    image: postgres:16-alpine
+    container_name: sera-sis-windmill-db
+    restart: unless-stopped
+    shm_size: 1g
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${WM_DB_PASSWORD:-changeme}
+      POSTGRES_DB: windmill
+    volumes:
+      - windmill_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - windmill
+
+  windmill_server:
+    <<: *windmill
+    container_name: sera-sis-windmill-server
+    environment:
+      DATABASE_URL: postgres://postgres:${WM_DB_PASSWORD:-changeme}@windmill_db:5432/windmill?sslmode=disable
+      MODE: server
+      BASE_URL: ${WM_BASE_URL:-http://localhost:8000}
+      TZ: Asia/Jakarta
+    ports:
+      - "${WM_PORT:-8000}:8000"
+    networks:
+      - windmill
+
+  # One worker is plenty for an hourly HTTP call. Add replicas for heavier jobs.
+  windmill_worker:
+    <<: *windmill
+    container_name: sera-sis-windmill-worker
+    environment:
+      DATABASE_URL: postgres://postgres:${WM_DB_PASSWORD:-changeme}@windmill_db:5432/windmill?sslmode=disable
+      MODE: worker
+      WORKER_GROUP: default
+      TZ: Asia/Jakarta
+    volumes:
+      - windmill_worker_cache:/tmp/windmill/cache
+    networks:
+      - windmill
+      - sera-sis-network
+
+networks:
+  windmill:
+  sera-sis-network:
+    external: true
+
+volumes:
+  windmill_db_data:
+  windmill_worker_cache:
