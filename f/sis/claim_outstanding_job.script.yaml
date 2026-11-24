@@ -1,0 +1,24 @@
+summary: API-CL-34 Job Outstanding
+description: Registrasi > 24 jam & dokumen wajib belum lengkap -> Outstanding
+  (IA Claim 11 §5). Loop hasMore maks 10, retry 5xx 2x/30 detik, 409 dilewati.
+lock: '!inline f/sis/claim_outstanding_job.script.lock'
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    api_key_variable:
+      type: string
+      description: ''
+      default: f/sis/claim_internal_api_key
+      originalType: string
+    base_url_variable:
+      type: string
+      description: ''
+      default: f/sis/claim_service_base_url
+      originalType: string
+    limit:
+      type: number
+      description: 'Maks klaim yang dipindah (1..1000), satu panggilan tanpa loop.
+        Schedule memakai 100. Kosongkan untuk run penuh (hati-hati: email massal).'
+  required: []

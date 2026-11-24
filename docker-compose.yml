@@ -14,8 +14,8 @@ name: sera-sis-windmill
 #   docker compose -f windmill/docker-compose.yml --env-file windmill/.env up -d
 #   UI: http://localhost:8000  (first login admin@windmill.dev / changeme)
 #
-# Then run ./windmill/setup.sh once to create the workspace, variables,
-# script and schedule. See windmill/README.md.
+# Then create workspace + folder `sis`, set the variables and deploy with the
+# wmill CLI (`wmill sync push`). See windmill/README.md.
 
 x-windmill: &windmill
   image: ghcr.io/windmill-labs/windmill:${WM_VERSION:-main}
