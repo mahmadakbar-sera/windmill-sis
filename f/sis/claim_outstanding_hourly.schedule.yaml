@@ -1,6 +1,6 @@
-summary: Job Outstanding klaim, tiap jam menit ke-5, maks 100 klaim per run
+summary: Job Outstanding klaim, tiap jam menit ke-5, maks 50 klaim per run
 args:
-  limit: 100
+  limit: 50
 cron_version: v2
 enabled: false
 is_flow: false

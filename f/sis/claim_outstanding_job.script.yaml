@@ -20,5 +20,5 @@ schema:
     limit:
       type: number
       description: 'Maks klaim yang dipindah (1..1000), satu panggilan tanpa loop.
-        Schedule memakai 100. Kosongkan untuk run penuh (hati-hati: email massal).'
+        Schedule memakai 50. Kosongkan untuk run penuh (hati-hati: email massal).'
   required: []

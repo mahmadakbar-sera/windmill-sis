@@ -7,7 +7,7 @@
 // Scheduled every hour at minute 5, Asia/Jakarta (f/sis/claim_outstanding_hourly).
 //
 // `limit`: one call with `?limit=`, no `hasMore` loop, so a run moves at most
-// that many claims. The schedule passes 100, capping the CLAIM_OUTSTANDING
+// that many claims. The schedule passes 50, capping the CLAIM_OUTSTANDING
 // emails per tick (24 Nov: a full run sent thousands at once). Empty = full
 // run with the `hasMore` loop.
 
@@ -77,7 +77,7 @@ async function callOnce(url: string, apiKey: string): Promise<Outcome> {
 export async function main(
   base_url_variable = "f/sis/claim_service_base_url",
   api_key_variable = "f/sis/claim_internal_api_key",
-  /** Max claims (1..1000) for a single call; the schedule passes 100. Empty = full run. */
+  /** Max claims (1..1000) for a single call; the schedule passes 50. Empty = full run. */
   limit?: number,
 ) {
   const baseUrl = (await wmill.getVariable(base_url_variable)).replace(/\/$/, "");

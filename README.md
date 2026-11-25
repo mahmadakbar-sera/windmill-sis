@@ -6,7 +6,7 @@ Deploy memakai **Windmill CLI** (`wmill sync push`). Folder ini adalah sumber ke
 
 | Job | Script | Schedule | Endpoint |
 | --- | --- | --- | --- |
-| API-CL-34 Job Outstanding | `f/sis/claim_outstanding_job` | `f/sis/claim_outstanding_hourly`: `0 5 * * * *` (detik menit jam …), Asia/Jakarta, **`limit: 100`** per run | `POST {claim-service}/internal/v1/claims/jobs/outstanding` |
+| API-CL-34 Job Outstanding | `f/sis/claim_outstanding_job` | `f/sis/claim_outstanding_hourly`: `0 5 * * * *` (detik menit jam …), Asia/Jakarta, **`limit: 50`** per run | `POST {claim-service}/internal/v1/claims/jobs/outstanding` |
 
 ## Isi folder
 
@@ -89,13 +89,13 @@ Edit `f/sis/claim_outstanding_hourly.schedule.yaml`, lalu `wmill sync push`:
 
 ```yaml
 args:
-  limit: 100               # maks klaim dipindah per run (1..1000)
+  limit: 50                # maks klaim dipindah per run (1..1000)
 schedule: 0 5 * * * *      # 6 field: detik menit jam tanggal bulan hari
 timezone: Asia/Jakarta
 enabled: false             # true untuk menyalakan
 ```
 
-**Batas per run (`limit`).** Setiap klaim yang pindah ke Outstanding mengirim email `CLAIM_OUTSTANDING` ke **semua** PIC Cabang di BA klaim itu. Run penuh tanpa batas pernah mengirim ribuan email sekaligus (24 Nov 2026), jadi schedule mengirim `limit: 100`: satu panggilan, maks 100 klaim per run; sisanya menunggu run berikutnya. Kapasitas = `limit` × run per hari (100 × 24 = 2.400 klaim/hari untuk tiap jam). Jumlah email per run = 100 × jumlah PIC per BA, bukan tepat 100.
+**Batas per run (`limit`).** Setiap klaim yang pindah ke Outstanding mengirim email `CLAIM_OUTSTANDING` ke **semua** PIC Cabang di BA klaim itu. Run penuh tanpa batas pernah mengirim ribuan email sekaligus (24 Nov 2026), jadi schedule mengirim `limit: 50`: satu panggilan, maks 50 klaim per run; sisanya menunggu run berikutnya. Kapasitas = `limit` × run per hari (50 × 24 = 1.200 klaim/hari untuk tiap jam). Jumlah email per run = 50 × jumlah PIC per BA, bukan tepat 50.
 
 | Kebutuhan | Cron |
 | --- | --- |
